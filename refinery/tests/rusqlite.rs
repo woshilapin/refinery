@@ -9,7 +9,7 @@ mod rusqlite {
     use predicates::str::contains;
     use refinery::{
         config::{migrate_from_config, Config, ConfigDbType},
-        Error, Migrate, Migration,
+        Error, Migrate, Migration, Target,
     };
     use refinery_core::rusqlite::{Connection, OptionalExtension, NO_PARAMS};
     use std::fs::{self, File};
@@ -319,7 +319,8 @@ mod rusqlite {
         let migrations = get_migrations();
 
         let mchecksum = migrations[4].checksum();
-        conn.migrate(&migrations, true, true, false).unwrap();
+        conn.migrate(&migrations, true, true, false, Target::Latest)
+            .unwrap();
 
         let (current, checksum): (u32, String) = conn
             .query_row(
@@ -333,6 +334,45 @@ mod rusqlite {
     }
 
     #[test]
+    fn migrates_to_target_migration() {
+        let mut conn = Connection::open_in_memory().unwrap();
+
+        embedded::migrations::runner()
+            .set_target(Target::Version(3))
+            .run(&mut conn)
+            .unwrap();
+
+        let (current, checksum): (u32, String) = conn
+            .query_row(
+                "SELECT version, checksum FROM refinery_schema_history where version = (SELECT MAX(version) from refinery_schema_history)",
+                NO_PARAMS,
+                |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())),
+            )
+            .unwrap();
+        assert_eq!(3, current);
+    }
+
+    #[test]
+    fn migrates_to_target_migration_grouped() {
+        let mut conn = Connection::open_in_memory().unwrap();
+
+        embedded::migrations::runner()
+            .set_target(Target::Version(3))
+            .set_grouped(true)
+            .run(&mut conn)
+            .unwrap();
+
+        let (current, checksum): (u32, String) = conn
+            .query_row(
+                "SELECT version, checksum FROM refinery_schema_history where version = (SELECT MAX(version) from refinery_schema_history)",
+                NO_PARAMS,
+                |row| Ok((row.get(0).unwrap(), row.get(1).unwrap())),
+            )
+            .unwrap();
+        assert_eq!(3, current);
+    }
+
+    #[test]
     fn aborts_on_missing_migration_on_filesystem() {
         let mut conn = Connection::open_in_memory().unwrap();
 
@@ -343,7 +383,9 @@ mod rusqlite {
             &"ALTER TABLE cars ADD year INTEGER;",
         )
         .unwrap();
-        let err = conn.migrate(&[migration], true, true, false).unwrap_err();
+        let err = conn
+            .migrate(&[migration], true, true, false, Target::Latest)
+            .unwrap_err();
 
         match err {
             Error::MissingVersion(missing) => {
@@ -366,7 +408,7 @@ mod rusqlite {
         )
         .unwrap();
         let err = conn
-            .migrate(&[migration.clone()], true, false, false)
+            .migrate(&[migration.clone()], true, false, false, Target::Latest)
             .unwrap_err();
 
         match err {
@@ -403,7 +445,7 @@ mod rusqlite {
         )
         .unwrap();
         let err = conn
-            .migrate(&[migration1, migration2], true, true, false)
+            .migrate(&[migration1, migration2], true, true, false, Target::Latest)
             .unwrap_err();
         match err {
             Error::MissingVersion(missing) => {

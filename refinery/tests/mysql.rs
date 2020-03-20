@@ -9,7 +9,7 @@ mod mysql {
     use predicates::str::contains;
     use refinery::{
         config::{migrate_from_config, Config, ConfigDbType},
-        Error, Migrate, Migration,
+        Error, Migrate, Migration, Target,
     };
     use refinery_core::mysql;
     use std::process::Command;
@@ -365,7 +365,8 @@ mod mysql {
             let migrations = get_migrations();
 
             let mchecksum = migrations[4].checksum();
-            conn.migrate(&migrations, true, true, false).unwrap();
+            conn.migrate(&migrations, true, true, false, Target::Latest)
+                .unwrap();
 
             for _row in conn
                 .query("SELECT version, checksum FROM refinery_schema_history where version = (SELECT MAX(version) from refinery_schema_history)")
@@ -376,6 +377,53 @@ mod mysql {
                 let checksum: String = row.get(1).unwrap();
                 assert_eq!(5, current);
                 assert_eq!(mchecksum.to_string(), checksum);
+            }
+        });
+    }
+
+    #[test]
+    fn migrates_to_target_migration() {
+        run_test(|| {
+            let pool =
+                mysql::Pool::new("mysql://refinery:root@localhost:3306/refinery_test").unwrap();
+            let mut conn = pool.get_conn().unwrap();
+
+            embedded::migrations::runner()
+                .set_target(Target::Version(3))
+                .run(&mut conn)
+                .unwrap();
+
+            for _row in conn
+                .query("SELECT version, checksum FROM refinery_schema_history where version = (SELECT MAX(version) from refinery_schema_history)")
+                .unwrap()
+            {
+                let row = _row.unwrap();
+                let current: i32 = row.get(0).unwrap();
+                assert_eq!(3, current);
+            }
+        });
+    }
+
+    #[test]
+    fn migrates_to_target_migration_grouped() {
+        run_test(|| {
+            let pool =
+                mysql::Pool::new("mysql://refinery:root@localhost:3306/refinery_test").unwrap();
+            let mut conn = pool.get_conn().unwrap();
+
+            embedded::migrations::runner()
+                .set_target(Target::Version(3))
+                .set_grouped(true)
+                .run(&mut conn)
+                .unwrap();
+
+            for _row in conn
+                .query("SELECT version, checksum FROM refinery_schema_history where version = (SELECT MAX(version) from refinery_schema_history)")
+                .unwrap()
+            {
+                let row = _row.unwrap();
+                let current: i32 = row.get(0).unwrap();
+                assert_eq!(3, current);
             }
         });
     }
@@ -394,7 +442,9 @@ mod mysql {
                 &"ALTER TABLE cars ADD year INTEGER;",
             )
             .unwrap();
-            let err = conn.migrate(&[migration], true, true, false).unwrap_err();
+            let err = conn
+                .migrate(&[migration], true, true, false, Target::Latest)
+                .unwrap_err();
 
             match err {
                 Error::MissingVersion(missing) => {
@@ -421,7 +471,7 @@ mod mysql {
             )
             .unwrap();
             let err = conn
-                .migrate(&[migration.clone()], true, false, false)
+                .migrate(&[migration.clone()], true, false, false, Target::Latest)
                 .unwrap_err();
 
             match err {
@@ -462,7 +512,7 @@ mod mysql {
             )
             .unwrap();
             let err = conn
-                .migrate(&[migration1, migration2], true, true, false)
+                .migrate(&[migration1, migration2], true, true, false, Target::Latest)
                 .unwrap_err();
             match err {
                 Error::MissingVersion(missing) => {
