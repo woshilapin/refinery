@@ -7,12 +7,44 @@ use proc_macro::TokenStream;
 use proc_macro2::{Span as Span2, TokenStream as TokenStream2};
 use quote::quote;
 use quote::ToTokens;
+use regex::Regex;
 use std::env;
 use std::ffi::OsStr;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use syn::{parse_macro_input, Ident, LitStr};
+use thiserror::Error;
+use walkdir::{DirEntry, WalkDir};
 
-use refinery_core::find_migration_files;
+/// Enum listing possible errors from Refinery.
+#[derive(Debug, Error)]
+enum Error {
+    #[error("invalid migrations path {0}, {1}")]
+    InvalidMigrationPath(PathBuf, std::io::Error),
+}
+
+fn find_migration_files(
+    location: impl AsRef<Path>,
+) -> Result<impl Iterator<Item = PathBuf>, Error> {
+    let re = Regex::new(r"^(V)(\d+(?:\.\d+)?)__(\w+)\.rs$").unwrap();
+    let location: &Path = location.as_ref();
+    let location = location
+        .canonicalize()
+        .map_err(|err| Error::InvalidMigrationPath(location.to_path_buf(), err))?;
+
+    let file_paths = WalkDir::new(location)
+        .into_iter()
+        .filter_map(Result::ok)
+        .map(DirEntry::into_path)
+        // filter by migration file regex
+        .filter(
+            move |entry| match entry.file_name().and_then(OsStr::to_str) {
+                Some(file_name) => re.is_match(file_name),
+                None => false,
+            },
+        );
+
+    Ok(file_paths)
+}
 
 pub(crate) fn crate_root() -> PathBuf {
     let crate_root = env::var("CARGO_MANIFEST_DIR")

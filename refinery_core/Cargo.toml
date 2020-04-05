@@ -19,10 +19,10 @@ log = "0.4"
 chrono = "0.4"
 serde = { version = "1", features = ["derive"] }
 cfg-if = "0.1.10"
-thiserror = "1"
 async-trait = "0.1"
 toml = "0.5"
 siphasher = "0.3"
+thiserror = "1"
 walkdir = "2.3.1"
 
 rusqlite = {version = "0.21", optional = true}
