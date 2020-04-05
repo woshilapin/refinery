@@ -12,7 +12,7 @@ use std::ffi::OsStr;
 use std::path::PathBuf;
 use syn::{parse_macro_input, Ident, LitStr};
 
-use refinery_core::{find_migration_files, MigrationType};
+use refinery_core::find_migration_files;
 
 pub(crate) fn crate_root() -> PathBuf {
     let crate_root = env::var("CARGO_MANIFEST_DIR")
@@ -44,7 +44,7 @@ pub fn include_migration_mods(input: TokenStream) -> TokenStream {
         crate_root().join(location.value())
     };
 
-    let migration_mod_names = find_migration_files(location, MigrationType::Mod)
+    let migration_mod_names = find_migration_files(location)
         .expect("error getting migration files")
         .filter_map(|entry| entry.file_stem().and_then(OsStr::to_str).map(String::from));
 
