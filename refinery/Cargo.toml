@@ -11,16 +11,6 @@ keywords = ["database", "sql", "migrations", "orm"]
 categories = ["database"]
 edition = "2018"
 
-[features]
-default = []
-rusqlite-bundled = ["refinery-core/rusqlite-bundled"]
-rusqlite = ["refinery-core/rusqlite"]
-postgres = ["refinery-core/postgres"]
-mysql = ["refinery-core/mysql"]
-tokio-postgres = ["refinery-core/tokio-postgres"]
-mysql_async = ["refinery-core/mysql_async"]
-tokio = ["refinery-core/tokio"]
-
 [dependencies]
 refinery-core= { version = "0.2.0", path = "../refinery_core" }
 refinery-macros= { version = "0.2.0", path = "../refinery_macros" }
