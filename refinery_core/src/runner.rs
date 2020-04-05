@@ -142,67 +142,10 @@ impl fmt::Display for AppliedMigration {
     }
 }
 
-/// Struct that represents the entrypoint to run the migrations,
-/// an instance of this struct is returned by the [`embed_migrations!`] and [`include_migration_mods!`] macros.
-/// `Runner` should not need to be instantiated manually
-///
-/// [`embed_migrations!`]: macro.embed_migrations.html
-/// [`include_migration_mods!`]: macro.include_migration_mods.html
-pub struct Runner {
-    grouped: bool,
-    abort_divergent: bool,
-    abort_missing: bool,
-    migrations: Vec<Migration>,
-    target: Target,
-}
+pub struct Runner {}
 
 impl Runner {
-    pub fn new(migrations: &[Migration]) -> Runner {
-        Runner {
-            grouped: false,
-            target: Target::Latest,
-            abort_divergent: true,
-            abort_missing: true,
-            migrations: migrations.to_vec(),
-        }
-    }
-
-    /// set the target version up to which refinery should migrate, Latest migrates to the latest version available
-    /// Version migrates to a user provided version, a Version with a higher version than the latest will be ignored.
-    /// by default this is set to Latest
-    pub fn set_target(self, target: Target) -> Runner {
-        Runner { target, ..self }
-    }
-
-    /// Set true if all migrations should be grouped and run in a single transaction.
-    /// by default this is set to false, each migration runs on their own transaction
-    ///
-    /// # Note
-    ///
-    /// set_grouped won't probbaly work on MySQL Databases as MySQL lacks support for transactions around schema alteration operations,
-    /// meaning that if a migration fails to apply you will have to manually unpick the changes in order to try again (it’s impossible to roll back to an earlier point).
-    pub fn set_grouped(self, grouped: bool) -> Runner {
-        Runner { grouped, ..self }
-    }
-
-    /// Set true if migration process should abort if divergent migrations are found
-    /// i.e. applied migrations with the same version but different name or checksum from the ones on the filesystem.
-    /// by default this is set to true
-    pub fn set_abort_divergent(self, abort_divergent: bool) -> Runner {
-        Runner {
-            abort_divergent,
-            ..self
-        }
-    }
-
-    /// Set true if migration process should abort if missing migrations are found
-    /// i.e. applied migrations that are not found on the filesystem,
-    /// or migrations found on filesystem with a version inferior to the last one applied but not applied.
-    /// by default this is set to true
-    pub fn set_abort_missing(self, abort_divergent: bool) -> Runner {
-        Runner {
-            abort_divergent,
-            ..self
-        }
+    pub fn new(_migrations: &[Migration]) -> Runner {
+        Runner {}
     }
 }
