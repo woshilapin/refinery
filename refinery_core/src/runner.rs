@@ -6,7 +6,7 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
-use crate::{AsyncMigrate, Error, Migrate};
+use crate::Error;
 
 // regex used to match file names
 pub fn file_match_re() -> Regex {
@@ -204,36 +204,5 @@ impl Runner {
             abort_divergent,
             ..self
         }
-    }
-
-    /// Runs the Migrations in the supplied database connection
-    pub fn run<'a, C>(&self, conn: &'a mut C) -> Result<(), Error>
-    where
-        C: Migrate,
-    {
-        Migrate::migrate(
-            conn,
-            &self.migrations,
-            self.abort_divergent,
-            self.abort_missing,
-            self.grouped,
-            self.target,
-        )
-    }
-
-    /// Runs the Migrations asynchronously in the supplied database connection
-    pub async fn run_async<C>(&self, conn: &mut C) -> Result<(), Error>
-    where
-        C: AsyncMigrate + Send,
-    {
-        AsyncMigrate::migrate(
-            conn,
-            &self.migrations,
-            self.abort_divergent,
-            self.abort_missing,
-            self.grouped,
-            self.target,
-        )
-        .await
     }
 }
