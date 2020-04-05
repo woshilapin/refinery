@@ -141,11 +141,3 @@ impl fmt::Display for AppliedMigration {
         write!(fmt, "V{}__{}", self.version, self.name)
     }
 }
-
-pub struct Runner {}
-
-impl Runner {
-    pub fn new(_migrations: &[Migration]) -> Runner {
-        Runner {}
-    }
-}
