@@ -1,6 +1,5 @@
 [workspace]
 members = [
     "refinery",
-    "refinery_core",
     "refinery_macros"
 ]

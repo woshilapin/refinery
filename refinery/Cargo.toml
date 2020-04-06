@@ -12,5 +12,4 @@ categories = ["database"]
 edition = "2018"
 
 [dependencies]
-refinery-core= { version = "0.2.0", path = "../refinery_core" }
 refinery-macros= { version = "0.2.0", path = "../refinery_macros" }

@@ -12,7 +12,6 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
-refinery-core= { version = "0.2.0", path = "../refinery_core" }
 quote = "1"
 syn = { version = "1", features=["full"] }
 proc-macro2 = "1"

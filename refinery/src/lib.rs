@@ -1,3 +1,6 @@
 #[doc(hidden)]
-pub use refinery_core::Migration;
+#[derive(Clone, Debug)]
+pub struct Migration {
+    pub name: String,
+}
 pub use refinery_macros::include_migration_mods;
