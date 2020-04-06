@@ -12,9 +12,7 @@ pub fn find_migration_files(
 ) -> Result<impl Iterator<Item = PathBuf>, Error> {
     let re = Regex::new(r"^(V)(\d+(?:\.\d+)?)__(\w+)\.rs$").unwrap();
     let location: &Path = location.as_ref();
-    let location = location
-        .canonicalize()
-        .map_err(|err| Error::InvalidMigrationPath(location.to_path_buf(), err))?;
+    let location = location.canonicalize().map_err(|_| Error::InvalidName)?;
 
     let file_paths = WalkDir::new(location)
         .into_iter()

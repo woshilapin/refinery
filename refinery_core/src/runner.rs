@@ -48,7 +48,7 @@ impl Migration {
             .captures(name)
             .filter(|caps| caps.len() == 4)
             .ok_or(Error::InvalidName)?;
-        let version = captures[2].parse().map_err(|_| Error::InvalidVersion)?;
+        let version = captures[2].parse().map_err(|_| Error::InvalidName)?;
 
         let name = (&captures[3]).into();
         let prefix = match &captures[1] {
