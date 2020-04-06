@@ -36,22 +36,7 @@ fn migration_fn_quoted<T: ToTokens>(_migrations: Vec<T>) -> TokenStream2 {
 fn find_migration_files(
     location: impl AsRef<Path>,
 ) -> Result<impl Iterator<Item = PathBuf>, String> {
-    let re = Regex::new(r"^([^m]\w+)\.rs$").unwrap();
-    let location: &Path = location.as_ref();
-    let location = location.canonicalize().map_err(|_| String::new())?;
-
-    let file_paths = WalkDir::new(location)
-        .into_iter()
-        .filter_map(Result::ok)
-        .map(DirEntry::into_path)
-        .filter(
-            move |entry| match entry.file_name().and_then(OsStr::to_str) {
-                Some(file_name) => re.is_match(file_name),
-                None => false,
-            },
-        );
-
-    Ok(file_paths)
+    Ok(vec![PathBuf::from("initial.rs")].into_iter())
 }
 
 #[proc_macro]
