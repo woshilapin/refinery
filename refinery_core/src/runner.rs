@@ -4,34 +4,17 @@ use siphasher::sip::SipHasher13;
 
 use std::hash::{Hash, Hasher};
 
-// regex used to match file names
-pub fn file_match_re() -> Regex {
-    Regex::new(r"^(V)(\d+(?:\.\d+)?)__(\w+)").unwrap()
-}
-
-lazy_static::lazy_static! {
-    static ref RE: regex::Regex = file_match_re();
-}
-
-/// An enum set that represents the prefix for the Migration, at the moment only Versioned is supported
 #[derive(Clone, Debug)]
 pub enum MigrationPrefix {
     Versioned,
 }
 
-/// An enum set that represents the target version up to which refinery should migrate, it is used by [Runner]
 #[derive(Clone, Copy)]
 pub enum Target {
     Latest,
     Version(usize),
 }
 
-/// Represents a schema migration to be run on the database,
-/// this struct is used by the [`embed_migrations!`] and [`include_migration_mods!`] macros to gather migration files
-/// and shouldn't be needed by the user
-///
-/// [`embed_migrations!`]: macro.embed_migrations.html
-/// [`include_migration_mods!`]: macro.include_migration_mods.html
 #[derive(Clone, Debug)]
 pub struct Migration {
     pub name: String,
@@ -42,7 +25,8 @@ pub struct Migration {
 
 impl Migration {
     pub fn from_filename(name: &str, sql: &str) -> Result<Migration, String> {
-        let captures = RE
+        let captures = Regex::new(r"^(V)(\d+(?:\.\d+)?)__(\w+)")
+            .unwrap()
             .captures(name)
             .filter(|caps| caps.len() == 4)
             .ok_or_else(String::new)?;
@@ -63,14 +47,6 @@ impl Migration {
     }
 
     pub fn checksum(&self) -> u64 {
-        // Previously, `std::collections::hash_map::DefaultHasher` was used
-        // to calculate the checksum and the implementation at that time
-        // was SipHasher13. However, that implementation is not guaranteed:
-        // > The internal algorithm is not specified, and so it and its
-        // > hashes should not be relied upon over releases.
-        // We now explicitly use SipHasher13 to both remain compatible with
-        // existing migrations and prevent breaking from possible future
-        // changes to `DefaultHasher`.
         let mut hasher = SipHasher13::new();
         self.name.hash(&mut hasher);
         self.version.hash(&mut hasher);
