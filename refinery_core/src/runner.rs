@@ -2,8 +2,6 @@ use chrono::{DateTime, Local};
 use regex::Regex;
 use siphasher::sip::SipHasher13;
 
-use std::cmp::Ordering;
-use std::fmt;
 use std::hash::{Hash, Hasher};
 
 use crate::Error;
@@ -83,52 +81,10 @@ impl Migration {
     }
 }
 
-impl fmt::Display for Migration {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(fmt, "V{}__{}", self.version, self.name)
-    }
-}
-
-impl Eq for Migration {}
-
-impl PartialEq for Migration {
-    fn eq(&self, other: &Migration) -> bool {
-        self.version == other.version
-            && self.name == other.name
-            && self.checksum() == other.checksum()
-    }
-}
-
-impl Ord for Migration {
-    fn cmp(&self, other: &Migration) -> Ordering {
-        self.version.cmp(&other.version)
-    }
-}
-
-impl PartialOrd for Migration {
-    fn partial_cmp(&self, other: &Migration) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct AppliedMigration {
     pub name: String,
     pub version: usize,
     pub applied_on: DateTime<Local>,
     pub checksum: String,
-}
-
-impl Eq for AppliedMigration {}
-
-impl PartialEq for AppliedMigration {
-    fn eq(&self, other: &AppliedMigration) -> bool {
-        self.version == other.version && self.name == other.name && self.checksum == other.checksum
-    }
-}
-
-impl fmt::Display for AppliedMigration {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(fmt, "V{}__{}", self.version, self.name)
-    }
 }
