@@ -1,4 +1,3 @@
-use crate::Error;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use walkdir::{DirEntry, WalkDir};
@@ -9,10 +8,10 @@ use regex::Regex;
 
 pub fn find_migration_files(
     location: impl AsRef<Path>,
-) -> Result<impl Iterator<Item = PathBuf>, Error> {
+) -> Result<impl Iterator<Item = PathBuf>, String> {
     let re = Regex::new(r"^(V)(\d+(?:\.\d+)?)__(\w+)\.rs$").unwrap();
     let location: &Path = location.as_ref();
-    let location = location.canonicalize().map_err(|_| Error::InvalidName)?;
+    let location = location.canonicalize().map_err(|_| String::new())?;
 
     let file_paths = WalkDir::new(location)
         .into_iter()

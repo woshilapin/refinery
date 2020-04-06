@@ -12,24 +12,14 @@ use std::env;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use syn::{parse_macro_input, Ident, LitStr};
-use thiserror::Error;
 use walkdir::{DirEntry, WalkDir};
-
-/// Enum listing possible errors from Refinery.
-#[derive(Debug, Error)]
-enum Error {
-    #[error("invalid migrations path {0}, {1}")]
-    InvalidMigrationPath(PathBuf, std::io::Error),
-}
 
 fn find_migration_files(
     location: impl AsRef<Path>,
-) -> Result<impl Iterator<Item = PathBuf>, Error> {
+) -> Result<impl Iterator<Item = PathBuf>, String> {
     let re = Regex::new(r"^(V)(\d+(?:\.\d+)?)__(\w+)\.rs$").unwrap();
     let location: &Path = location.as_ref();
-    let location = location
-        .canonicalize()
-        .map_err(|err| Error::InvalidMigrationPath(location.to_path_buf(), err))?;
+    let location = location.canonicalize().map_err(|_| String::new())?;
 
     let file_paths = WalkDir::new(location)
         .into_iter()

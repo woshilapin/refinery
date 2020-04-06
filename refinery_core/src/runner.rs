@@ -4,8 +4,6 @@ use siphasher::sip::SipHasher13;
 
 use std::hash::{Hash, Hasher};
 
-use crate::Error;
-
 // regex used to match file names
 pub fn file_match_re() -> Regex {
     Regex::new(r"^(V)(\d+(?:\.\d+)?)__(\w+)").unwrap()
@@ -43,12 +41,12 @@ pub struct Migration {
 }
 
 impl Migration {
-    pub fn from_filename(name: &str, sql: &str) -> Result<Migration, Error> {
+    pub fn from_filename(name: &str, sql: &str) -> Result<Migration, String> {
         let captures = RE
             .captures(name)
             .filter(|caps| caps.len() == 4)
-            .ok_or(Error::InvalidName)?;
-        let version = captures[2].parse().map_err(|_| Error::InvalidName)?;
+            .ok_or_else(String::new)?;
+        let version = captures[2].parse().map_err(|_| String::new())?;
 
         let name = (&captures[3]).into();
         let prefix = match &captures[1] {
