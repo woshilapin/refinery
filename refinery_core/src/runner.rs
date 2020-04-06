@@ -5,12 +5,6 @@ pub enum MigrationPrefix {
     Versioned,
 }
 
-#[derive(Clone, Copy)]
-pub enum Target {
-    Latest,
-    Version(usize),
-}
-
 #[derive(Clone, Debug)]
 pub struct Migration {
     pub name: String,
