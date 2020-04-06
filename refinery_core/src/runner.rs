@@ -81,15 +81,6 @@ impl Migration {
         self.sql.hash(&mut hasher);
         hasher.finish()
     }
-
-    pub fn as_applied(&self) -> AppliedMigration {
-        AppliedMigration {
-            name: self.name.clone(),
-            version: self.version,
-            checksum: self.checksum().to_string(),
-            applied_on: Local::now(),
-        }
-    }
 }
 
 impl fmt::Display for Migration {
