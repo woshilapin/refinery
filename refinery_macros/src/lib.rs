@@ -1,6 +1,5 @@
 //! Contains Refinery macros that are used to import and embed migration files.
 #![recursion_limit = "128"]
-//TODO remove when previous version is 1.42
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
@@ -37,7 +36,7 @@ fn migration_fn_quoted<T: ToTokens>(_migrations: Vec<T>) -> TokenStream2 {
 fn find_migration_files(
     location: impl AsRef<Path>,
 ) -> Result<impl Iterator<Item = PathBuf>, String> {
-    let re = Regex::new(r"^(V)(\d+(?:\.\d+)?)__(\w+)\.rs$").unwrap();
+    let re = Regex::new(r"^([^m]\w+)\.rs$").unwrap();
     let location: &Path = location.as_ref();
     let location = location.canonicalize().map_err(|_| String::new())?;
 
