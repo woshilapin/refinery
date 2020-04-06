@@ -14,6 +14,26 @@ use std::path::{Path, PathBuf};
 use syn::{parse_macro_input, Ident, LitStr};
 use walkdir::{DirEntry, WalkDir};
 
+pub(crate) fn crate_root() -> PathBuf {
+    let crate_root = env::var("CARGO_MANIFEST_DIR")
+        .expect("CARGO_MANIFEST_DIR environment variable not present");
+    PathBuf::from(crate_root)
+}
+
+fn migration_fn_quoted<T: ToTokens>(_migrations: Vec<T>) -> TokenStream2 {
+    let result = quote! {
+        use refinery::Migration;
+        pub fn runner() {
+            let quoted_migrations: Vec<(&str, String)> = vec![#(#_migrations),*];
+            let mut migrations: Vec<Migration> = Vec::new();
+            for module in quoted_migrations.into_iter() {
+                migrations.push(Migration::from_filename(module.0, &module.1).unwrap());
+            }
+        }
+    };
+    result
+}
+
 fn find_migration_files(
     location: impl AsRef<Path>,
 ) -> Result<impl Iterator<Item = PathBuf>, String> {
@@ -25,7 +45,6 @@ fn find_migration_files(
         .into_iter()
         .filter_map(Result::ok)
         .map(DirEntry::into_path)
-        // filter by migration file regex
         .filter(
             move |entry| match entry.file_name().and_then(OsStr::to_str) {
                 Some(file_name) => re.is_match(file_name),
@@ -34,26 +53,6 @@ fn find_migration_files(
         );
 
     Ok(file_paths)
-}
-
-pub(crate) fn crate_root() -> PathBuf {
-    let crate_root = env::var("CARGO_MANIFEST_DIR")
-        .expect("CARGO_MANIFEST_DIR environment variable not present");
-    PathBuf::from(crate_root)
-}
-
-fn migration_fn_quoted<T: ToTokens>(_migrations: Vec<T>) -> TokenStream2 {
-    let result = quote! {
-        use refinery::{Migration};
-        pub fn runner() {
-            let quoted_migrations: Vec<(&str, String)> = vec![#(#_migrations),*];
-            let mut migrations: Vec<Migration> = Vec::new();
-            for module in quoted_migrations.into_iter() {
-                migrations.push(Migration::from_filename(module.0, &module.1).unwrap());
-            }
-        }
-    };
-    result
 }
 
 #[proc_macro]

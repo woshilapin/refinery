@@ -1,28 +1,4 @@
 use regex::Regex;
-use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
-use walkdir::{DirEntry, WalkDir};
-
-pub fn find_migration_files(
-    location: impl AsRef<Path>,
-) -> Result<impl Iterator<Item = PathBuf>, String> {
-    let re = Regex::new(r"^(V)(\d+(?:\.\d+)?)__(\w+)\.rs$").unwrap();
-    let location: &Path = location.as_ref();
-    let location = location.canonicalize().map_err(|_| String::new())?;
-
-    let file_paths = WalkDir::new(location)
-        .into_iter()
-        .filter_map(Result::ok)
-        .map(DirEntry::into_path)
-        .filter(
-            move |entry| match entry.file_name().and_then(OsStr::to_str) {
-                Some(file_name) => re.is_match(file_name),
-                None => false,
-            },
-        );
-
-    Ok(file_paths)
-}
 
 #[derive(Clone, Debug)]
 pub enum MigrationPrefix {
