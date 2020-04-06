@@ -6,18 +6,9 @@ use proc_macro::TokenStream;
 use proc_macro2::{Span as Span2, TokenStream as TokenStream2};
 use quote::quote;
 use quote::ToTokens;
-use regex::Regex;
-use std::env;
 use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
-use syn::{parse_macro_input, Ident, LitStr};
-use walkdir::{DirEntry, WalkDir};
-
-pub(crate) fn crate_root() -> PathBuf {
-    let crate_root = env::var("CARGO_MANIFEST_DIR")
-        .expect("CARGO_MANIFEST_DIR environment variable not present");
-    PathBuf::from(crate_root)
-}
+use std::path::PathBuf;
+use syn::Ident;
 
 fn migration_fn_quoted<T: ToTokens>(_migrations: Vec<T>) -> TokenStream2 {
     let result = quote! {
@@ -26,30 +17,19 @@ fn migration_fn_quoted<T: ToTokens>(_migrations: Vec<T>) -> TokenStream2 {
             let quoted_migrations: Vec<(&str, String)> = vec![#(#_migrations),*];
             let mut migrations: Vec<Migration> = Vec::new();
             for module in quoted_migrations.into_iter() {
-                migrations.push(Migration::from_filename(module.0).unwrap());
+                migrations.push(Migration {
+                    name: "initial".into(),
+                });
             }
         }
     };
     result
 }
 
-fn find_migration_files(
-    location: impl AsRef<Path>,
-) -> Result<impl Iterator<Item = PathBuf>, String> {
-    Ok(vec![PathBuf::from("initial.rs")].into_iter())
-}
-
 #[proc_macro]
-pub fn include_migration_mods(input: TokenStream) -> TokenStream {
-    let location = if input.is_empty() {
-        crate_root().join("src").join("migrations")
-    } else {
-        let location: LitStr = parse_macro_input!(input);
-        crate_root().join(location.value())
-    };
-
-    let migration_mod_names = find_migration_files(location)
-        .expect("error getting migration files")
+pub fn include_migration_mods(_: TokenStream) -> TokenStream {
+    let migration_mod_names = vec![PathBuf::from("initial.rs")]
+        .into_iter()
         .filter_map(|entry| entry.file_stem().and_then(OsStr::to_str).map(String::from));
 
     let mut migrations_mods = Vec::new();
