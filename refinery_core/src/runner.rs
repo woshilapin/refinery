@@ -1,8 +1,4 @@
-use chrono::{DateTime, Local};
 use regex::Regex;
-use siphasher::sip::SipHasher13;
-
-use std::hash::{Hash, Hasher};
 
 #[derive(Clone, Debug)]
 pub enum MigrationPrefix {
@@ -45,20 +41,4 @@ impl Migration {
             prefix,
         })
     }
-
-    pub fn checksum(&self) -> u64 {
-        let mut hasher = SipHasher13::new();
-        self.name.hash(&mut hasher);
-        self.version.hash(&mut hasher);
-        self.sql.hash(&mut hasher);
-        hasher.finish()
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct AppliedMigration {
-    pub name: String,
-    pub version: usize,
-    pub applied_on: DateTime<Local>,
-    pub checksum: String,
 }
